@@ -1,0 +1,17 @@
+python3 -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+pip install -r requirements.txt
+
+python app.py
+
+encryption-app/
+│
+├── app.py                   # The main Flask application
+├── templates/
+│   └── index.html           # The HTML template for the frontend
+├── static/
+│   ├── background.jpeg      # Background image used in the frontend
+│   └── style.css            # CSS styles (if separated)
+├── requirements.txt         # Python dependencies
+└── README.md                # This readme file

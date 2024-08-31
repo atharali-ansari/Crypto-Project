@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Encryption/Decryption</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <style>
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('/static/background.jpeg');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #ffffff;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #ffcc00;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #ffcc00;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #ffcc00;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ffaa00;
+        }
+
+        hr {
+            border: 1px solid #444;
+            margin: 20px 0;
+        }
+
+        .result {
+            margin-top: 20px;
+            display: none;
+            font-size: 16px;
+        }
+
+        .result.success {
+            color: #00ff00;
+        }
+
+        .result.error {
+            color: #ff4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Encrypt or Decrypt a File</h1>
+        
+        <!-- Encryption Form -->
+        <form id="encryptForm" action="/encrypt" method="post" enctype="multipart/form-data">
+            <h2>Encrypt a File</h2>
+            <input type="file" name="file" required>
+            <input type="text" name="key" placeholder="Enter encryption key" required>
+            <button type="submit">Encrypt</button>
+        </form>
+        <hr>
+        
+        <!-- Decryption Form -->
+        <form id="decryptForm" action="/decrypt" method="post" enctype="multipart/form-data">
+            <h2>Decrypt a File</h2>
+            <input type="file" name="file" required>
+            <input type="text" name="key" placeholder="Enter decryption key" required>
+            
+            <!-- File Type Selection -->
+            <label for="fileType">Select Your File Type:</label>
+            <select id="fileType" required>
+                <option value="" disabled selected>Select file type</option>
+                <option value="Text Files">Text Files</option>
+                <option value="Image Files">Image Files</option>
+                <option value="Audio Files">Audio Files</option>
+                <option value="Video Files">Video Files</option>
+                <option value="Compressed Archive Files">Compressed Archive Files</option>
+                <option value="Executable Files">Executable Files</option>
+                <option value="Programming & Source Code Files">Programming & Source Code Files</option>
+                <option value="Database Files">Database Files</option>
+                <option value="System Files">System Files</option>
+                <option value="Microsoft Files">Microsoft Files</option>
+            </select>
+
+            <!-- File Extension Selection -->
+            <label for="fileExtension">Select Your File Extension:</label>
+            <select id="fileExtension" name="extension" required>
+                <option value="" disabled selected>Select file extension</option>
+            </select>
+
+            <button type="submit">Decrypt</button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <footer>
+        &copy; 2024 Athar Ali. All rights reserved.
+    </footer>
+
+    <script>
+        const fileTypeSelect = document.getElementById('fileType');
+        const fileExtensionSelect = document.getElementById('fileExtension');
+
+        const fileExtensions = {
+            "Text Files": [".txt", ".md", ".rtf", ".doc", ".docx", ".odt", ".pdf"],
+            "Image Files": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".svg", ".webp"],
+            "Audio Files": [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a", ".wma"],
+            "Video Files": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm"],
+            "Compressed Archive Files": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".iso"],
+            "Executable Files": [".exe", ".bat", ".sh", ".msi", ".apk", ".bin"],
+            "Programming & Source Code Files": [".py", ".java", ".c", ".cpp", ".cs", ".html", ".css", ".js", ".php", ".rb", ".xml", ".json"],
+            "Database Files": [".db", ".sql", ".mdb", ".accdb", ".sqlite"],
+            "System Files": [".sys", ".dll", ".ini", ".log"],
+            "Microsoft Files": [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".mdb"]
+        };
+
+        fileTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            const extensions = fileExtensions[selectedType] || [];
+
+            fileExtensionSelect.innerHTML = '<option value="" disabled selected>Select file extension</option>';
+            extensions.forEach(ext => {
+                const option = document.createElement('option');
+                option.value = ext;
+                option.textContent = ext;
+                fileExtensionSelect.appendChild(option);
+            });
+        });
+
+        document.getElementById('encryptForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/encrypt', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    throw new Error('Encryption failed');
+                }
+            }).then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'encryptedfile.enc';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showResult('File encrypted successfully!', 'success');
+            }).catch(error => {
+                showResult(error.message, 'error');
+            });
+        });
+
+        document.getElementById('decryptForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/decrypt', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    throw new Error('Decryption failed');
+                }
+            }).then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `decryptedfile${formData.get('extension')}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showResult('File decrypted successfully!', 'success');
+            }).catch(error => {
+                showResult(error.message, 'error');
+            });
+        });
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
